@@ -42,18 +42,27 @@ Answer each question in 3 to 5 sentences. Be specific and honest about what actu
 
 ## 4. What did you learn about Streamlit and state?
 
-- In your own words, explain why the secret number kept changing in the original app.
-- How would you explain Streamlit "reruns" and session state to a friend who has never used Streamlit?
-- What change did you make that finally gave the game a stable secret number?
+**Why the Secret Number Kept Changing:**
+Streamlit reruns the entire script from top to bottom every single time a user interacts with the app (button click, form submission, input change, etc.). In the original code, the check `if "secret" not in st.session_state` was there, but any interaction would trigger a full rerun. The real issue wasn't that the check was missing—it was that other bugs and logic made it hard to see that the _only_ way to keep the secret persistent is to use session state correctly and _never_ regenerate it after the initial setup.
+
+**Explaining Reruns and Session State:**
+Imagine Streamlit like a person reading your Python script out loud from start to finish every time something changes. Session state is like a notebook the person carries between readings—when you write something in the notebook (session state), it stays there even though the person reads the script fresh each time. Without session state, variables would reset on every rerun. Session state lets you store values that persist across reruns, even though the script code itself runs fresh every time.
+
+**The Fix That Stabilized the Secret Number:**
+The key change was ensuring `if "secret" not in st.session_state: st.session_state.secret = random.randint(low, high)` ran exactly once during the entire game session, and then _never_ regenerated the secret except when explicitly clicking "New Game". This pattern—checking if a value exists in session_state before creating it—is the fundamental way to maintain state in Streamlit. Understanding this one pattern solved the core issue of the changing secret number.
 
 ---
 
 ## 5. Looking ahead: your developer habits
 
-- What is one habit or strategy from this project that you want to reuse in future labs or projects?
-  - This could be a testing habit, a prompting strategy, or a way you used Git.
-- What is one thing you would do differently next time you work with AI on a coding task?
-- In one or two sentences, describe how this project changed the way you think about AI generated code.
+**Habit to Reuse - Test-Driven Bug Fixing:**
+From this project, I'm adopting the practice of writing comprehensive tests alongside bug fixes. Instead of just fixing code and assuming it works, I wrote 27 pytest tests that directly target each bug, providing objective proof that fixes work. This habit makes me confident in my repairs and prevents regressions. In future projects, I'll write tests first when fixing bugs—it forces me to understand what correct behavior looks like before coding the fix.
+
+**What I'd Do Differently with AI - File State Validation:**
+When working with AI-generated code fixes, I'll be more cautious with bulk file editing tools. In this project, the AI suggested using `replace_string_in_file` on corrupted file content, which made things worse. Next time, I'll verify the file's current state before applying suggestions and consider simpler approaches like recreating files with `cat >` when the file is in an unclear state. I'd also ask the AI for the full file content before making edits, rather than asking it to patch specific sections.
+
+**How This Project Changed My Thinking About AI Code:**
+AI-generated code is like a rough draft that requires rigorous testing and verification before trust—it can look correct but contain subtle logic errors (like reversed messages or type mismatches). This project taught me that AI is excellent at generating boilerplate and suggesting fixes, but the human responsibility is to test thoroughly, think critically about edge cases, and never assume correctness without evidence.
 
 ---
 
