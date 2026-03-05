@@ -1,67 +1,7 @@
 import random
 import streamlit as st
+# FIX: Refactored core game logic into logic_utils.py using Copilot Agent mode
 from logic_utils import get_range_for_difficulty, parse_guess, check_guess, update_score
-    if difficulty == "Easy":
-        return 1, 20
-    if difficulty == "Normal":
-        return 1, 50
-    if difficulty == "Hard":
-        return 1, 100
-    return 1, 100
-
-
-def parse_guess(raw: str):
-    if raw is None:
-        return False, None, "Enter a guess."
-
-    if raw == "":
-        return False, None, "Enter a guess."
-
-    try:
-        if "." in raw:
-            value = int(float(raw))
-        else:
-            value = int(raw)
-    except Exception:
-        return False, None, "That is not a number."
-
-    return True, value, None
-
-
-def check_guess(guess, secret):
-    if guess == secret:
-        return "Win", "🎉 Correct!"
-
-    try:
-        if guess > secret:
-            return "Too High", "� Go LOWER!"
-        else:
-            return "Too Low", "📈 Go HIGHER!"
-    except TypeError:
-        g = str(guess)
-        if g == secret:
-            return "Win", "🎉 Correct!"
-        if g > secret:
-            return "Too High", "� Go LOWER!"
-        return "Too Low", "📈 Go HIGHER!"
-
-
-def update_score(current_score: int, outcome: str, attempt_number: int):
-    if outcome == "Win":
-        points = 100 - 10 * (attempt_number + 1)
-        if points < 10:
-            points = 10
-        return current_score + points
-
-    if outcome == "Too High":
-        if attempt_number % 2 == 0:
-            return current_score + 5
-        return current_score - 5
-
-    if outcome == "Too Low":
-        return current_score - 5
-
-    return current_score
 
 st.set_page_config(page_title="Glitchy Guesser", page_icon="🎮")
 
@@ -106,6 +46,7 @@ if "history" not in st.session_state:
 st.subheader("Make a guess")
 
 st.info(
+    # BUG FIX: Message now uses dynamic range based on difficulty level
     f"Guess a number between {low} and {high}. "
     f"Attempts left: {attempt_limit - st.session_state.attempts}"
 )
@@ -117,6 +58,7 @@ with st.expander("Developer Debug Info"):
     st.write("Difficulty:", difficulty)
     st.write("History:", st.session_state.history)
 
+# BUG FIX: Wrapped in st.form() so Enter key submits guess (was requiring button click)
 with st.form("guess_form"):
     raw_guess = st.text_input(
         "Enter your guess:",
@@ -131,6 +73,8 @@ with col2:
     show_hint = st.checkbox("Show hint", value=True)
 
 if new_game:
+    # BUG FIX: Reset all session state variables when starting new game
+    # Was only resetting attempts and secret, leaving status as 'won' or 'lost'
     st.session_state.attempts = 1
     st.session_state.secret = random.randint(1, 100)
     st.session_state.status = "playing"
@@ -157,6 +101,8 @@ if submit:
     else:
         st.session_state.history.append(guess_int)
 
+        # BUG FIX: Removed type conversion bug. Was converting secret to string on even attempts,
+        # causing incorrect comparison and telling user to go opposite direction.
         outcome, message = check_guess(guess_int, st.session_state.secret)
 
         if show_hint:
